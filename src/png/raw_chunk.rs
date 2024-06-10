@@ -13,6 +13,8 @@ impl PngRawChunkType {
   pub const bKGD: Self = Self(*b"bKGD");
   pub const sRGB: Self = Self(*b"sRGB");
   pub const gAMA: Self = Self(*b"gAMA");
+  pub const iCCP: Self = Self(*b"iCCP");
+  pub const cHRM: Self = Self(*b"cHRM");
 }
 impl Debug for PngRawChunkType {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

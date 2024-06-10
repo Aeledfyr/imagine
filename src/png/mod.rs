@@ -81,6 +81,29 @@ pub fn png_get_gamma(bytes: &[u8]) -> Option<u32> {
   })
 }
 
+/// Gets the cHRM info in the PNG, if any
+#[inline]
+fn png_get_chrm(bytes: &[u8]) -> Option<&[u8; 32]> {
+  PngRawChunkIter::new(bytes).find_map(|raw_chunk| {
+    let png_chunk = PngChunk::try_from(raw_chunk).ok()?;
+    match png_chunk {
+      PngChunk::cHRM(g) => Some(g),
+      _ => None,
+    }
+  })
+}
+/// Gets the ICC info in the PNG, if any
+#[inline]
+fn png_get_iccp(bytes: &[u8]) -> Option<&[u8]> {
+  PngRawChunkIter::new(bytes).find_map(|raw_chunk| {
+    let png_chunk = PngChunk::try_from(raw_chunk).ok()?;
+    match png_chunk {
+      PngChunk::iCCP(g) => Some(g),
+      _ => None,
+    }
+  })
+}
+
 /// Gets the palette out of the PNG bytes.
 ///
 /// Each `[u8;3]` in the palette is an `[r8, g8, b8]` color entry.
@@ -237,7 +260,8 @@ where
     true,
   );
 
-  let is_srgb = png_get_srgb(bytes).is_some();
+  // If color space is fully unspecified, assume sRGB
+  let is_srgb = png_get_srgb(bytes).is_some() || (png_get_gamma(bytes).is_none() && png_get_chrm(bytes).is_none() && png_get_iccp(bytes).is_none());
 
   let gamma = png_get_gamma(bytes).unwrap_or(100_000_u32) as f32 / 100_000.0_f32;
   let gamma_exp = 1.0 / gamma;

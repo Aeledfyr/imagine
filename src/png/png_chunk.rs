@@ -10,6 +10,11 @@ pub enum PngChunk<'b> {
   sRGB(sRGBIntent),
   /// Gamma value times 100,000.
   gAMA(u32),
+  /// cHRM table
+  // TODO: This should be 8 u32s, but may not be aligned
+  cHRM(&'b [u8; 32]),
+  /// Embeded ICC profile data
+  iCCP(&'b [u8]),
   /// Palette
   PLTE(PLTE<'b>),
   /// Transparency
@@ -50,6 +55,12 @@ impl<'b> TryFrom<PngRawChunk<'b>> for PngChunk<'b> {
       }),
       PngRawChunkType::gAMA if raw.data.len() == 4 => {
         PngChunk::gAMA(u32::from_be_bytes(raw.data.try_into().unwrap()))
+      }
+      PngRawChunkType::cHRM if raw.data.len() == 32 => {
+        PngChunk::cHRM(raw.data.try_into().unwrap())
+      }
+      PngRawChunkType::iCCP => {
+        PngChunk::iCCP(raw.data)
       }
       PngRawChunkType::IDAT => PngChunk::IDAT(IDAT::from(raw.data)),
       PngRawChunkType::IEND => PngChunk::IEND,
